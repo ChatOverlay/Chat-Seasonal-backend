@@ -2,10 +2,12 @@ const mongoose = require("mongoose");
 
 const seasonalUserSchema = new mongoose.Schema(
   {
-    studentNumber: { type: Number, required: true, unique: true },  // 학번 추가
-    name: { type: String, required: true },  // 이름 추가
+    studentNumber: { type: Number, required: true, unique: true },
+    name: { type: String, required: true },
     nickName: { type: String, default: '무한이' },
-    password: { type: Number, required: true },  // 숫자로 저장
+    password: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    course: { type: String, required: true },  // 코스 추가
     totalMileage: { type: Number, default: 0 },
     profilePictureUrl: { type: String, default: '' },
   },

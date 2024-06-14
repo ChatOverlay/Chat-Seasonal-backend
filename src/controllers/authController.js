@@ -1,101 +1,41 @@
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const SeasonalUser = require('../models/SeasonalUser');
-const { sendVerificationEmail } = require('../services/emailService');
+const registerSeasonalUser = require('../services/registerService');
+const loginSeasonalUser = require('../services/loginService');
+const sendVerificationCode = require('../services/sendVerificationCodeService');
+const checkEmail = require('../services/checkEmailService');
 
-const verificationCodes = {};
-
-const registerSeasonalUser = async (req, res) => {
-  const { studentNumber, name, password, email, verificationCode } = req.body;
-
-  if (!verificationCodes[email] || verificationCodes[email] !== verificationCode) {
-    return res.status(400).json({ message: 'Invalid or expired verification code.' });
-  }
+const registerUser = async (req, res) => {
+  const { studentNumber, name, password, email, course, verificationCode } = req.body;
 
   try {
-    let user = await SeasonalUser.findOne({ studentNumber });
-
-    if (user) {
-      return res.status(400).json({
-        message: '이미 존재하는 사용자입니다.',
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password.toString(), 10); // 비밀번호 해시화
-    user = new SeasonalUser({
-      studentNumber,
-      name,
-      password: hashedPassword,
-    });
-    await user.save();
-
-    const accessToken = jwt.sign(
-      { studentNumber: user.studentNumber, id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '30d' }
-    );
-
-    // Verification code 사용 후 삭제
-    delete verificationCodes[email];
-
-    return res.json({
-      message: '회원가입 성공',
-      accessToken,
-    });
+    const result = await registerSeasonalUser({ studentNumber, name, password, email, course, verificationCode });
+    res.json(result);
   } catch (error) {
     console.error('회원가입 처리 중 오류 발생:', error);
     res.status(500).json({
-      message: '서버 오류로 인해 회원가입을 처리할 수 없습니다.',
+      message: error.message,
     });
   }
 };
 
-const loginSeasonalUser = async (req, res) => {
+const loginUser = async (req, res) => {
   const { studentNumber, password } = req.body;
 
   try {
-    let user = await SeasonalUser.findOne({ studentNumber });
-
-    if (!user) {
-      return res.status(401).json({
-        message: '사용자를 찾을 수 없습니다.',
-      });
-    }
-
-    const isValid = await bcrypt.compare(password.toString(), user.password);
-    if (!isValid) {
-      return res
-        .status(401)
-        .json({ message: '인증 실패: 비밀번호가 일치하지 않습니다.' });
-    }
-
-    const accessToken = jwt.sign(
-      { studentNumber: user.studentNumber, id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '30d' }
-    );
-
-    res.json({
-      message: '로그인 성공',
-      accessToken,
-    });
+    const result = await loginSeasonalUser({ studentNumber, password });
+    res.json(result);
   } catch (error) {
     console.error('로그인 처리 중 오류 발생:', error);
-    res
-      .status(500)
-      .json({ message: '서버 오류로 인해 로그인을 처리할 수 없습니다.' });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
-const sendVerificationCode = (req, res) => {
+const sendCode = (req, res) => {
   const { email } = req.body;
-  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-  // 임시로 인증 코드 저장
-  verificationCodes[email] = verificationCode;
 
   try {
-    sendVerificationEmail(email, verificationCode);
+    sendVerificationCode(email);
     res.json({ message: 'Verification code sent successfully.' });
   } catch (error) {
     console.error('Error sending verification code:', error);
@@ -103,8 +43,42 @@ const sendVerificationCode = (req, res) => {
   }
 };
 
+const verifyEmail = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const result = await checkEmail(email);
+    res.json(result);
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({ message: 'Error checking email.' });
+  }
+};
+
+const verifyToken = (req, res) => {
+  res.json({ success: true, message: 'Token is valid' });
+};
+
+const getUserCourses = async (req, res) => {
+  const { email } = req.user;
+
+  try {
+    const user = await SeasonalUser.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+    res.json({ course: user.course });
+  } catch (error) {
+    console.error('사용자 코스를 가져오는 중 오류 발생:', error);
+    res.status(500).json({ message: '사용자 코스를 가져오는 중 오류가 발생했습니다.', error });
+  }
+};
+
 module.exports = {
-  registerSeasonalUser,
-  loginSeasonalUser,
-  sendVerificationCode,
+  registerSeasonalUser: registerUser,
+  loginSeasonalUser: loginUser,
+  sendVerificationCode: sendCode,
+  verifyEmail,
+  verifyToken,
+  getUserCourses,
 };
