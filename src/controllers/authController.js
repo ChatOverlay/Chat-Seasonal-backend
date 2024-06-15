@@ -2,18 +2,17 @@ const registerSeasonalUser = require('../services/registerService');
 const loginSeasonalUser = require('../services/loginService');
 const sendVerificationCode = require('../services/sendVerificationCodeService');
 const checkEmail = require('../services/checkEmailService');
+const { verificationCodes } = require('../services/verificationCodes');
 
 const registerUser = async (req, res) => {
-  const { studentNumber, name, password, email, course, verificationCode } = req.body;
+  const { studentNumber, name, password, email, course } = req.body;
 
   try {
-    const result = await registerSeasonalUser({ studentNumber, name, password, email, course, verificationCode });
+    const result = await registerSeasonalUser({ studentNumber, name, password, email, course });
     res.json(result);
   } catch (error) {
     console.error('회원가입 처리 중 오류 발생:', error);
-    res.status(500).json({
-      message: error.message,
-    });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -25,9 +24,7 @@ const loginUser = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('로그인 처리 중 오류 발생:', error);
-    res.status(500).json({
-      message: error.message,
-    });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -74,10 +71,22 @@ const getUserCourses = async (req, res) => {
   }
 };
 
+const verifyEmailCode = (req, res) => {
+  const { email, verificationCode } = req.body;
+
+  if (verificationCodes[email] === verificationCode) {
+    delete verificationCodes[email]; // 사용된 인증 코드를 삭제
+    res.json({ message: 'Email verified successfully.' });
+  } else {
+    res.status(400).json({ message: 'Invalid verification code.' });
+  }
+};
+
 module.exports = {
   registerSeasonalUser: registerUser,
   loginSeasonalUser: loginUser,
   sendVerificationCode: sendCode,
+  verifyEmailCode,
   verifyEmail,
   verifyToken,
   getUserCourses,

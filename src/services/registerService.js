@@ -1,17 +1,15 @@
+const SeasonalUser = require('../models/SeasonalUser'); // 모델 임포트 예시
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
 const registerSeasonalUser = async ({
   studentNumber,
   name,
   password,
   email,
   course,
-  verificationCode,
+  nickName = "무한이", // 기본 별명 설정
 }) => {
-  if (
-    !verificationCodes[email] ||
-    verificationCodes[email] !== verificationCode
-  ) {
-    throw new Error("Invalid or expired verification code.");
-  }
 
   let user = await SeasonalUser.findOne({ studentNumber });
 
@@ -23,7 +21,7 @@ const registerSeasonalUser = async ({
   user = new SeasonalUser({
     studentNumber,
     name,
-    nickName: nickName || "무한이", // 별명 필드 추가
+    nickName, // 별명 필드 추가
     password: hashedPassword,
     email,
     course, // 코스 필드 추가
@@ -36,8 +34,6 @@ const registerSeasonalUser = async ({
     process.env.JWT_SECRET,
     { expiresIn: "30d" }
   );
-
-  delete verificationCodes[email];
 
   return { message: "회원가입 성공", accessToken };
 };
