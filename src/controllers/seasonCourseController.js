@@ -3,7 +3,7 @@ const SeasonCourse = require("../models/SeasonCourse");
 // 모든 코스 가져오기
 const getAllCourses = async (req, res) => {
   try {
-    const courses = await SeasonCourse.find().select("courseName");
+    const courses = await SeasonCourse.find().select("courseName courseCode professor");
     res.json(courses);
   } catch (error) {
     res

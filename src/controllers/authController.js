@@ -17,10 +17,10 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { studentNumber, password } = req.body;
 
   try {
-    const result = await loginSeasonalUser({ email, password });
+    const result = await loginSeasonalUser({ studentNumber, password });
     res.json(result);
   } catch (error) {
     console.error('로그인 처리 중 오류 발생:', error);

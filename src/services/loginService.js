@@ -2,8 +2,8 @@ const SeasonalUser = require('../models/SeasonalUser'); // 모델 임포트 예�
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const loginSeasonalUser = async ({ email, password }) => {
-  const user = await SeasonalUser.findOne({ email });
+const loginSeasonalUser = async ({ studentNumber, password }) => {
+  const user = await SeasonalUser.findOne({ studentNumber });
   if (!user) {
     throw new Error('사용자를 찾을 수 없습니다.');
   }
@@ -14,7 +14,7 @@ const loginSeasonalUser = async ({ email, password }) => {
   }
 
   const accessToken = jwt.sign(
-    { email: user.email, id: user._id },
+    { studentNumber: user.studentNumber, id: user._id },
     process.env.JWT_SECRET,
     { expiresIn: "30d" }
   );
