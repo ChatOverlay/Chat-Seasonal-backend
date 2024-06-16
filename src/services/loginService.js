@@ -14,7 +14,7 @@ const loginSeasonalUser = async ({ email, password }) => {
   }
 
   const accessToken = jwt.sign(
-    { studentNumber: user.studentNumber, id: user._id },
+    { email: user.email, id: user._id },
     process.env.JWT_SECRET,
     { expiresIn: "30d" }
   );
