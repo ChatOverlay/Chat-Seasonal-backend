@@ -7,7 +7,7 @@ const seasonalUserSchema = new mongoose.Schema(
     nickName: { type: String, default: '무한이' },
     password: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    course: { type: String, required: true },  // 코스 추가
+    course: { type: String, required: true },
     totalMileage: { type: Number, default: 0 },
     profilePictureUrl: { type: String, default: '' },
   },

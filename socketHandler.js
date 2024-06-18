@@ -5,6 +5,7 @@ const ChatMessage = require('./src/models/ChatMessage');
 const SeasonalUser = require('./src/models/SeasonalUser');
 const SeasonCourse = require('./src/models/SeasonCourse');
 const MileageLog = require('./src/models/MileageLog');
+
 const initializeWebSocketServer = (server) => {
   const io = socketIo(server, {
     cors: {
@@ -52,6 +53,11 @@ const initializeWebSocketServer = (server) => {
           .populate('userId', 'nickName profilePictureUrl');
 
         for (const message of messages) {
+          if (!message.userId) {
+            console.warn('Message with null userId found:', message);
+            continue; // userId가 null인 경우 건너뛰기
+          }
+    
           socket.emit("message", {
             text: message.text,
             userId: message.userId._id,
@@ -59,7 +65,7 @@ const initializeWebSocketServer = (server) => {
             profilePictureUrl: message.userId.profilePictureUrl,
             timestamp: message.createdAt.toISOString(),
             expiresAt: message.expiresAt.toISOString(),
-            isCurrentUser: false,
+            isCurrentUser: message.userId._id.toString() === socket.decoded.id,
           });
         }
       } catch (error) {
