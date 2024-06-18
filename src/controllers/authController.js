@@ -2,7 +2,9 @@ const registerSeasonalUser = require("../services/registerService");
 const loginSeasonalUser = require("../services/loginService");
 const sendVerificationCode = require("../services/sendVerificationCodeService");
 const checkEmail = require("../services/checkEmailService");
+const adminLoginService = require("../services/adminLoginService");
 const { verificationCodes } = require("../services/verificationCodes");
+const AdminUser = require('../models/AdminUser'); // AdminUser 모델을 불러옵니다.
 
 const registerUser = async (req, res) => {
   try {
@@ -48,6 +50,22 @@ const sendCode = (req, res) => {
     console.error("Error sending verification code:", error);
     res.status(500).json({ message: "Error sending verification code." });
   }
+};
+
+const adminLogin = async (req, res) => {
+  const { password } = req.body;
+
+  try {
+    const response = await adminLoginService(password);
+    res.json(response);
+  } catch (error) {
+    console.error("로그인 처리 중 오류 발생:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const verifyAdmin = (req, res) => {
+  res.json({ success: true, message: "Admin is authenticated" });
 };
 
 const verifyEmail = async (req, res) => {
@@ -100,6 +118,8 @@ const verifyEmailCode = (req, res) => {
 module.exports = {
   registerSeasonalUser: registerUser,
   loginSeasonalUser: loginUser,
+  adminLogin,
+  verifyAdmin,
   sendVerificationCode: sendCode,
   verifyEmailCode,
   verifyEmail,
